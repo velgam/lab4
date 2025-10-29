@@ -15,6 +15,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         
+      - name: Setup Pages for versioning
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            mkdir -p ${{ github.event.release.tag_name }}
+            cp -r * ${{ github.event.release.tag_name }}/ || true
+          fi
+          
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
