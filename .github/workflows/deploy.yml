@@ -8,14 +8,13 @@ on:
   release:
     types: [published]
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -27,9 +26,9 @@ jobs:
     - name: Setup Pages
       uses: actions/configure-pages@v4
       
-    - name: Build with Jekyll (if needed)
+    - name: Build with Jekyll
       run: |
-        echo "No build step needed for static HTML"
+        echo "No build needed for static HTML"
         
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
