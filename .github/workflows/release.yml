@@ -13,18 +13,18 @@ jobs:
       
     - name: Create version folder
       run: |
-        echo "��� Creating version: ${{ github.event.release.tag_name }}"
         mkdir -p versions/${{ github.event.release.tag_name }}
         cp -r *.html ru/ en/ versions/${{ github.event.release.tag_name }}/
         
     - name: Commit and push
       run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
-        git add versions/
-        git diff --staged --quiet || git commit -m "Add version ${{ github.event.release.tag_name }}"
+        git config --global user.name "github-actions"
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add .
+        git commit -m "Add version ${{ github.event.release.tag_name }}" || exit 0
         git push
         
-    - name: Show link
+    - name: Show website link
       run: |
-        echo "��� Site URL: https://velgam.github.io/lab4/versions/${{ github.event.release.tag_name }}/"
+        echo "��� САЙТ ВЕРСИИ: https://velgam.github.io/lab4/versions/${{ github.event.release.tag_name }}/"
+        echo "��� Скопируй эту ссылку в описание релиза!"
