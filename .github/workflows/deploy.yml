@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main, gh-pages]
+    branches: [main]
   release:
     types: [published]
 
@@ -12,18 +12,19 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Create version folder on release
+      if: github.event_name == 'release'
+      run: |
+        echo "🔄 Creating version folder for ${{ github.event.release.tag_name }}"
+        mkdir -p versions/${{ github.event.release.tag_name }}
+        cp -r *.html ru/ en/ versions/${{ github.event.release.tag_name }}/
+        echo "✅ Created versions/${{ github.event.release.tag_name }}/"
         
-      - name: Setup Pages for versioning
-        run: |
-          if [[ "${{ github.event_name }}" == "release" ]]; then
-            mkdir -p ${{ github.event.release.tag_name }}
-            cp -r * ${{ github.event.release.tag_name }}/ || true
-          fi
-          
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./
