@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
       
     - name: Create version on release
       if: github.event_name == 'release'
@@ -25,4 +27,4 @@ jobs:
         git config --global user.email "actions@github.com"
         git add .
         git diff --staged --quiet || git commit -m "Add version ${{ github.event.release.tag_name }}"
-        git push
+        git push https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git main
