@@ -1,0 +1,30 @@
+name: Release Deploy
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy-release:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Create version folder
+      run: |
+        echo "Ì∫Ä Creating version: ${{ github.event.release.tag_name }}"
+        mkdir -p versions/${{ github.event.release.tag_name }}
+        cp -r *.html ru/ en/ versions/${{ github.event.release.tag_name }}/
+        
+    - name: Commit and push
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git add versions/
+        git diff --staged --quiet || git commit -m "Add version ${{ github.event.release.tag_name }}"
+        git push
+        
+    - name: Show link
+      run: |
+        echo "Ìºê Site URL: https://velgam.github.io/lab4/versions/${{ github.event.release.tag_name }}/"
