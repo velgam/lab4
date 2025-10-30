@@ -11,27 +11,20 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       
-    - name: Setup Git
-      run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
-      
     - name: Create version folder
       run: |
-        echo "🚀 Creating version: ${{ github.event.release.tag_name }}"
         mkdir -p versions/${{ github.event.release.tag_name }}
         cp -r *.html ru/ en/ versions/${{ github.event.release.tag_name }}/
         
-    - name: Deploy
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./
-        force_orphan: true
-        user_name: "github-actions"
-        user_email: "actions@github.com"
-        
-    - name: Show deployment link
+    - name: Commit and push
       run: |
-        echo "🌐 Site deployed to: https://velgam.github.io/lab4/versions/${{ github.event.release.tag_name }}/"
-        echo "📋 Copy this URL for your release notes!"
+        git config --global user.name "github-actions"
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add .
+        git commit -m "Add version ${{ github.event.release.tag_name }}" || exit 0
+        git push
+        
+    - name: Show website link
+      run: |
+        echo "🌐 САЙТ ВЕРСИИ: https://velgam.github.io/lab4/versions/${{ github.event.release.tag_name }}/"
+        echo "📋 Скопируй эту ссылку в описание релиза!"
