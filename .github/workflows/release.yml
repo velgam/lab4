@@ -54,14 +54,20 @@ jobs:
         echo "🔧 Fixing links for version: $VERSION_NAME"
         
         # Исправляем ссылки в русской версии
-        sed -i 's|href="/LAB4/|href="/LAB4/versions/'$VERSION_NAME'/|g' "versions/$VERSION_NAME/ru/index.html"
-        sed -i 's|href="en/|href="/LAB4/versions/'$VERSION_NAME'/en/|g' "versions/$VERSION_NAME/ru/index.html"
+        sed -i 's|href="/lab4/|href="/lab4/versions/'$VERSION_NAME'/|g' "versions/$VERSION_NAME/ru/index.html"
+        sed -i 's|href="en/|href="/lab4/versions/'$VERSION_NAME'/en/|g' "versions/$VERSION_NAME/ru/index.html"
+        sed -i 's|href="ru/|href="/lab4/versions/'$VERSION_NAME'/ru/|g' "versions/$VERSION_NAME/ru/index.html"
         sed -i 's|Версия: current|Версия: '$VERSION_NAME'|g' "versions/$VERSION_NAME/ru/index.html"
         
         # Исправляем ссылки в английской версии  
-        sed -i 's|href="/LAB4/|href="/LAB4/versions/'$VERSION_NAME'/|g' "versions/$VERSION_NAME/en/index.html"
-        sed -i 's|href="ru/|href="/LAB4/versions/'$VERSION_NAME'/ru/|g' "versions/$VERSION_NAME/en/index.html"
+        sed -i 's|href="/lab4/|href="/lab4/versions/'$VERSION_NAME'/|g' "versions/$VERSION_NAME/en/index.html"
+        sed -i 's|href="ru/|href="/lab4/versions/'$VERSION_NAME'/ru/|g' "versions/$VERSION_NAME/en/index.html"
+        sed -i 's|href="en/|href="/lab4/versions/'$VERSION_NAME'/en/|g' "versions/$VERSION_NAME/en/index.html"
         sed -i 's|Version: current|Version: '$VERSION_NAME'|g' "versions/$VERSION_NAME/en/index.html"
+        
+        # Исправляем ссылки в главной странице версии
+        sed -i 's|href="ru/|href="/lab4/versions/'$VERSION_NAME'/ru/|g' "versions/$VERSION_NAME/index.html"
+        sed -i 's|href="en/|href="/lab4/versions/'$VERSION_NAME'/en/|g' "versions/$VERSION_NAME/index.html"
         
         echo "✅ Links fixed for $VERSION_NAME"
 
@@ -117,6 +123,8 @@ jobs:
 
     - name: Show success message
       run: |
-        echo '🎉 SUCCESS! New version deployed: ${GITHUB_REF#refs/tags/}'
-        echo '🌐 Your site: ${{ steps.deployment.outputs.page_url }}'
-        echo '📱 New version available at: ${{ steps.deployment.outputs.page_url }}versions/${GITHUB_REF#refs/tags/}/ru/'
+        VERSION_NAME="${GITHUB_REF#refs/tags/}"
+        echo "🎉 SUCCESS! New version deployed: $VERSION_NAME"
+        echo "🌐 Your site: ${{ steps.deployment.outputs.page_url }}"
+        echo "📱 New version available at: ${{ steps.deployment.outputs.page_url }}versions/$VERSION_NAME/ru/"
+        echo "📊 Check main page: ${{ steps.deployment.outputs.page_url }}"
