@@ -1,14 +1,29 @@
 name: Deploy on Release
-on: [release]
+
+on:
+  release:
+    types: [published]
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: github-pages
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    
     steps:
-      - uses: actions/checkout@v4
-      - run: |
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+        
+      - name: Create version
+        run: |
           VERSION="${GITHUB_REF#refs/tags/}"
-          echo "Deploying: $VERSION"
+          echo "🚀 Deploying: $VERSION"
           
           # Create version folder
           mkdir -p "versions/$VERSION"
@@ -23,13 +38,31 @@ jobs:
               versions.unshift({
                 name: '$VERSION',
                 url: 'versions/$VERSION', 
-                date: new Date().toISOString()
+                date: new Date().toISOString(),
+                description: 'Automated release'
               });
               fs.writeFileSync('versions.json', JSON.stringify(versions, null, 2));
-              console.log('Added: $VERSION');
+              console.log('✅ Added version: $VERSION');
+              console.log('Total versions:', versions.length);
+            } else {
+              console.log('ℹ️ Version exists: $VERSION');
             }
             "
+          else
+            echo "[{\"name\":\"$VERSION\",\"url\":\"versions/$VERSION\",\"date\":\"$(date)\",\"description\":\"First release\"}]" > versions.json
           fi
-      - uses: actions/upload-pages-artifact@v3
-        with: { path: . }
-      - uses: actions/deploy-pages@v4
+          
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with: 
+          path: .
+          
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        
+      - name: Show success
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/}"
+          echo "🎉 SUCCESS! Version $VERSION deployed"
+          echo "🌐 Site: https://velgam.github.io/lab4/"
