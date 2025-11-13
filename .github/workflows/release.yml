@@ -26,14 +26,7 @@ jobs:
       with:
         node-version: '18'
 
-    - name: Debug - Show current files
-      run: |
-        echo "📁 Current directory structure:"
-        ls -la
-        echo "📁 Versions folder:"
-        ls -la versions/ || echo "No versions folder"
-
-    - name: Create NEW version folder
+    - name: Create version folder
       run: |
         VERSION_NAME="${GITHUB_REF#refs/tags/}"
         echo "🚀 Creating version: $VERSION_NAME"
@@ -41,90 +34,77 @@ jobs:
         # Создаем папку для новой версии
         mkdir -p "versions/$VERSION_NAME"
         
-        # Копируем ВСЕ нужные файлы
-        cp -r en/ ru/ index.html "versions/$VERSION_NAME/"
-        
-        # Проверяем что скопировалось
-        echo "✅ Copied files to versions/$VERSION_NAME:"
-        ls -la "versions/$VERSION_NAME/"
+        # Копируем файлы
+        cp -r en ru index.html "versions/$VERSION_NAME/"
+        echo "✅ Files copied to versions/$VERSION_NAME"
 
-    - name: Fix HTML links for versioned pages
+    - name: Fix HTML links
       run: |
         VERSION_NAME="${GITHUB_REF#refs/tags/}"
-        echo "🔧 Fixing links for version: $VERSION_NAME"
+        echo "🔧 Fixing links for: $VERSION_NAME"
         
-        # Исправляем ссылки в русской версии
+        # Русская версия
         sed -i 's|href="/lab4/|href="/lab4/versions/'$VERSION_NAME'/|g' "versions/$VERSION_NAME/ru/index.html"
         sed -i 's|href="en/|href="/lab4/versions/'$VERSION_NAME'/en/|g' "versions/$VERSION_NAME/ru/index.html"
-        sed -i 's|href="ru/|href="/lab4/versions/'$VERSION_NAME'/ru/|g' "versions/$VERSION_NAME/ru/index.html"
         sed -i 's|Версия: current|Версия: '$VERSION_NAME'|g' "versions/$VERSION_NAME/ru/index.html"
         
-        # Исправляем ссылки в английской версии  
+        # Английская версия
         sed -i 's|href="/lab4/|href="/lab4/versions/'$VERSION_NAME'/|g' "versions/$VERSION_NAME/en/index.html"
         sed -i 's|href="ru/|href="/lab4/versions/'$VERSION_NAME'/ru/|g' "versions/$VERSION_NAME/en/index.html"
-        sed -i 's|href="en/|href="/lab4/versions/'$VERSION_NAME'/en/|g' "versions/$VERSION_NAME/en/index.html"
         sed -i 's|Version: current|Version: '$VERSION_NAME'|g' "versions/$VERSION_NAME/en/index.html"
         
-        # Исправляем ссылки в главной странице версии
-        sed -i 's|href="ru/|href="/lab4/versions/'$VERSION_NAME'/ru/|g' "versions/$VERSION_NAME/index.html"
-        sed -i 's|href="en/|href="/lab4/versions/'$VERSION_NAME'/en/|g' "versions/$VERSION_NAME/index.html"
-        
-        echo "✅ Links fixed for $VERSION_NAME"
+        echo "✅ Links fixed"
 
-    - name: Update versions.json AUTOMATICALLY
+    - name: Update versions.json
       run: |
         VERSION_NAME="${GITHUB_REF#refs/tags/}"
-        echo "📝 Updating versions.json with: $VERSION_NAME"
+        echo "📝 Adding version to versions.json: $VERSION_NAME"
         
-        # Создаем начальный versions.json если его нет
+        # Создаем файл если его нет
         if [ ! -f versions.json ]; then
           echo '[]' > versions.json
         fi
         
-        # Добавляем новую версию в versions.json
+        # Добавляем версию БЕЗ удаления старых
         node -e "
         const fs = require('fs');
         let versions = [];
         
         try {
           versions = JSON.parse(fs.readFileSync('versions.json'));
+          console.log('Found existing versions:', versions.length);
         } catch (e) {
           console.log('Starting with empty versions array');
         }
         
-        // Удаляем старую запись этой версии (если есть)
-        versions = versions.filter(v => v.name !== '$VERSION_NAME');
+        // Добавляем только если версии нет
+        if (!versions.find(v => v.name === '$VERSION_NAME')) {
+          versions.unshift({
+            name: '$VERSION_NAME',
+            url: 'versions/$VERSION_NAME',
+            date: new Date().toISOString(),
+            description: 'Automated release'
+          });
+          console.log('✅ Added version: $VERSION_NAME');
+        } else {
+          console.log('ℹ️ Version exists: $VERSION_NAME');
+        }
         
-        // Добавляем новую версию В НАЧАЛО списка
-        versions.unshift({
-          name: '$VERSION_NAME',
-          url: 'versions/$VERSION_NAME',
-          date: new Date().toISOString(),
-          description: 'Automated release'
-        });
-        
-        // Сохраняем
         fs.writeFileSync('versions.json', JSON.stringify(versions, null, 2));
-        console.log('✅ Successfully added $VERSION_NAME to versions.json');
         console.log('Total versions:', versions.length);
         "
-        
-        echo "📄 Final versions.json:"
-        cat versions.json
 
-    - name: Upload artifact
+    - name: Upload and deploy
       uses: actions/upload-pages-artifact@v3
       with:
         path: .
-
+        
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4
 
-    - name: Show success message
+    - name: Success message
       run: |
         VERSION_NAME="${GITHUB_REF#refs/tags/}"
-        echo "🎉 SUCCESS! New version deployed: $VERSION_NAME"
-        echo "🌐 Your site: ${{ steps.deployment.outputs.page_url }}"
-        echo "📱 New version available at: ${{ steps.deployment.outputs.page_url }}versions/$VERSION_NAME/ru/"
-        echo "📊 Check main page: ${{ steps.deployment.outputs.page_url }}"
+        echo '🎉 SUCCESS! Version deployed: $VERSION_NAME'
+        echo '🌐 Site: ${{ steps.deployment.outputs.page_url }}'

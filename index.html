@@ -45,82 +45,76 @@
             text-decoration: none;
             color: #007acc;
             font-weight: bold;
+            margin-right: 15px;
         }
         .current-version {
             background: #e7f7ff;
             border-color: #007acc;
         }
+        .loading {
+            text-align: center;
+            color: #666;
+        }
     </style>
 </head>
 <body>
     <nav>
-        <a href="/LAB4/ru/">Русская версия</a>
-        <a href="/LAB4/en/">English Version</a>
+        <a href="ru/">Русская версия</a>
+        <a href="en/">English Version</a>
     </nav>
 
     <h1>🚀 Лабораторная работа №4</h1>
     <h2>Автоматизация публикации web приложения</h2>
     
-    <p>Добро пожаловать на главную страницу проекта! Этот проект демонстрирует настройку CI/CD с использованием GitHub Actions и GitHub Pages.</p>
+    <p>Добро пожаловать на главную страницу проекта!</p>
 
     <div class="version-card current-version">
-        <h3>📱 Текущая версия</h3>
-        <p><a href="/LAB4/ru/">Русская версия</a> | <a href="/LAB4/en/">English version</a></p>
+        <h3>📱 Текущая версия (последняя)</h3>
+        <p><a href="ru/">Русская версия</a> <a href="en/">English version</a></p>
     </div>
 
-    <h2>📚 Доступные версии сайта:</h2>
-    <div id="versions-list">
-        <p>Загрузка списка версий...</p>
+    <h2>📚 Все доступные версии сайта:</h2>
+    <div id="versions-list" class="loading">
+        Загрузка списка версий...
     </div>
-
-    <h2>ℹ️ Информация о проекте</h2>
-    <ul>
-        <li><strong>Дисциплина:</strong> Разработка программных приложений</li>
-        <li><strong>Тема:</strong> Автоматизация публикации web приложения</li>
-        <li><strong>Технологии:</strong> GitHub Pages, GitHub Actions, HTML, CSS, JavaScript</li>
-        <li><strong>Функции:</strong> Автоматический деплой, управление версиями, многоязычность</li>
-    </ul>
-
-    <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ccc; text-align: center;">
-        <p>Новосибирский государственный технический университет • Факультет бизнеса • 2024</p>
-    </footer>
 
     <script>
-        // Загрузка списка версий
-        fetch('versions.json')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('versions.json not found');
-                }
-                return response.json();
-            })
-            .then(versions => {
-                const list = document.getElementById('versions-list');
-                
-                if (versions.length === 0) {
-                    list.innerHTML = '<p>Пока нет доступных версий. Создайте первый релиз!</p>';
-                    return;
-                }
-                
-                list.innerHTML = '';
-                versions.forEach(version => {
-                    const versionElement = document.createElement('div');
-                    versionElement.className = 'version-card';
-                    versionElement.innerHTML = `
-                        <h3>Версия ${version.name}</h3>
-                        <p><strong>Дата:</strong> ${new Date(version.date).toLocaleDateString('ru-RU')}</p>
-                        <p>
-                            <a href="${version.url}/ru/">Русская версия</a> | 
-                            <a href="${version.url}/en/">English version</a>
-                        </p>
-                    `;
-                    list.appendChild(versionElement);
-                });
-            })
-            .catch(error => {
+        async function loadVersions() {
+            try {
+                const response = await fetch('versions.json');
+                const versions = await response.json();
+                displayVersions(versions);
+            } catch (error) {
                 document.getElementById('versions-list').innerHTML = 
-                    '<p>Пока нет доступных версий. После создания первого релиза здесь появятся все версии сайта.</p>';
+                    '<p>Версии загружаются...</p>';
+            }
+        }
+
+        function displayVersions(versions) {
+            const list = document.getElementById('versions-list');
+            
+            if (!versions || versions.length === 0) {
+                list.innerHTML = '<p>Пока нет версий. Создайте первый релиз!</p>';
+                return;
+            }
+            
+            list.innerHTML = '';
+            versions.forEach(version => {
+                const versionElement = document.createElement('div');
+                versionElement.className = 'version-card';
+                versionElement.innerHTML = `
+                    <h3>Версия ${version.name}</h3>
+                    <p><strong>Дата:</strong> ${new Date(version.date).toLocaleDateString('ru-RU')}</p>
+                    <p>
+                        <a href="${version.url}/ru/">Русская версия</a> 
+                        <a href="${version.url}/en/">English version</a>
+                    </p>
+                `;
+                list.appendChild(versionElement);
             });
+        }
+
+        loadVersions();
     </script>
 </body>
 </html>
