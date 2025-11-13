@@ -1,30 +1,82 @@
-name: Release Deploy
+name: Deploy to GitHub Pages on Release
 
 on:
   release:
     types: [published]
 
 jobs:
-  deploy-release:
+  deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    
     steps:
-    - name: Checkout
+    - name: Checkout code
       uses: actions/checkout@v4
-      
-    - name: Create version folder
+      with:
+        fetch-depth: 0
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+
+    - name: Create version deployment
       run: |
-        mkdir -p versions/${{ github.event.release.tag_name }}
-        cp -r *.html ru/ en/ versions/${{ github.event.release.tag_name }}/
+        VERSION_NAME="${GITHUB_REF#refs/tags/}"
+        echo "Deploying version: $VERSION_NAME"
         
-    - name: Commit and push
-      run: |
-        git config --global user.name "github-actions"
-        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        git add .
-        git commit -m "Add version ${{ github.event.release.tag_name }}" || exit 0
-        git push
+        # Создаем папку для версии
+        mkdir -p "versions/$VERSION_NAME"
         
-    - name: Show website link
+        # Копируем файлы в версионную папку
+        cp -r en ru index.html "versions/$VERSION_NAME/"
+        
+        # Обновляем ссылки в HTML файлах для версионных страниц
+        find "versions/$VERSION_NAME" -name "*.html" -exec sed -i "s|href=\"/LAB4/|href=\"/LAB4/versions/$VERSION_NAME/|g" {} \;
+        find "versions/$VERSION_NAME" -name "*.html" -exec sed -i "s|href=\"ru/|href=\"/LAB4/versions/$VERSION_NAME/ru/|g" {} \;
+        find "versions/$VERSION_NAME" -name "*.html" -exec sed -i "s|href=\"en/|href=\"/LAB4/versions/$VERSION_NAME/en/|g" {} \;
+        
+        # Добавляем информацию о версии на страницы
+        find "versions/$VERSION_NAME" -name "*.html" -exec sed -i "s|Версия: current|Версия: $VERSION_NAME|g" {} \;
+        find "versions/$VERSION_NAME" -name "*.html" -exec sed -i "s|Version: current|Version: $VERSION_NAME|g" {} \;
+
+    - name: Update versions list
       run: |
-        echo "��� САЙТ ВЕРСИИ: https://velgam.github.io/lab4/versions/${{ github.event.release.tag_name }}/"
-        echo "��� Скопируй эту ссылку в описание релиза!"
+        VERSION_NAME="${GITHUB_REF#refs/tags/}"
+        
+        # Создаем или обновляем versions.json
+        if [ -f versions.json ]; then
+          node -e "
+            const fs = require('fs');
+            const versions = JSON.parse(fs.readFileSync('versions.json'));
+            const newVersion = { name: '$VERSION_NAME', url: 'versions/$VERSION_NAME', date: new Date().toISOString() };
+            
+            // Добавляем версию если её еще нет
+            if (!versions.find(v => v.name === '$VERSION_NAME')) {
+              versions.unshift(newVersion);
+              fs.writeFileSync('versions.json', JSON.stringify(versions, null, 2));
+            }
+          "
+        else
+          echo '[{"name": "'$VERSION_NAME'", "url": "versions/'$VERSION_NAME'", "date": "'$(date -I)'"}]' > versions.json
+        fi
+
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: .
+
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+
+    - name: Show deployment info
+      run: |
+        echo "✅ Successfully deployed version: ${GITHUB_REF#refs/tags/}"
+        echo "📱 Your site will be available at: https://${{ github.repository_owner }}.github.io/LAB4/"

@@ -3,46 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Моё Веб-Приложение</title>
+    <title>Главная страница - Лабораторная работа №4</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        nav { margin-bottom: 20px; }
-        a { margin-right: 15px; text-decoration: none; color: #0366d6; }
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 900px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            line-height: 1.6;
+        }
+        nav { 
+            background: #f4f4f4; 
+            padding: 15px; 
+            border-radius: 5px; 
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        nav a { 
+            margin: 0 15px; 
+            text-decoration: none; 
+            color: #333; 
+            font-weight: bold;
+            font-size: 18px;
+        }
+        nav a:hover { 
+            color: #007acc; 
+        }
+        .version-card {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            transition: transform 0.2s;
+        }
+        .version-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .version-card a {
+            text-decoration: none;
+            color: #007acc;
+            font-weight: bold;
+        }
+        .current-version {
+            background: #e7f7ff;
+            border-color: #007acc;
+        }
     </style>
 </head>
 <body>
     <nav>
-        <a href="index.html">Главная</a>
-        <a href="ru/index.html">Русская версия</a>
-        <a href="en/index.html">English Version</a>
+        <a href="/LAB4/ru/">Русская версия</a>
+        <a href="/LAB4/en/">English Version</a>
     </nav>
-    
-    <h1>Моё Веб-Приложение</h1>
-    <p>Добро пожаловать на главную страницу!</p>
-    <p>Это демонстрационное веб-приложение для лабораторной работы №4.</p>
-    
-    <h2>О проекте</h2>
-    <p>Проект демонстрирует автоматизацию публикации веб-приложений с использованием GitHub Pages и GitHub Actions.</p>
-    <!-- ДОБАВЬ ЭТОТ БЛОК В КОНЕЦ ФАЙЛА -->
 
-<div style="margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
-    <h2>🚀 Доступные версии сайта:</h2>
-    <p>Все версии доступны одновременно по разным URL:</p>
+    <h1>🚀 Лабораторная работа №4</h1>
+    <h2>Автоматизация публикации web приложения</h2>
     
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px;">
-        <a href="versions/v1.0.0/index.html" style="display: block; padding: 15px; background: white; border-radius: 8px; text-decoration: none; color: #333; border: 2px solid #e9ecef;">
-            <strong>📄 Версия 1.0.0</strong><br>
-            <small>Базовая версия</small>
-        </a>
-        <a href="versions/v1.1.0/index.html" style="display: block; padding: 15px; background: white; border-radius: 8px; text-decoration: none; color: #333; border: 2px solid #e9ecef;">
-            <strong>🌟 Версия 1.1.0</strong><br>
-            <small>Улучшенный дизайн</small>
-        </a>
-        <a href="versions/v2.0.0/index.html" style="display: block; padding: 15px; background: white; border-radius: 8px; text-decoration: none; color: #333; border: 2px solid #e9ecef;">
-            <strong>🚀 Версия 2.0.0</strong><br>
-            <small>Премиум версия</small>
-        </a>
+    <p>Добро пожаловать на главную страницу проекта! Этот проект демонстрирует настройку CI/CD с использованием GitHub Actions и GitHub Pages.</p>
+
+    <div class="version-card current-version">
+        <h3>📱 Текущая версия</h3>
+        <p><a href="/LAB4/ru/">Русская версия</a> | <a href="/LAB4/en/">English version</a></p>
     </div>
-</div>
+
+    <h2>📚 Доступные версии сайта:</h2>
+    <div id="versions-list">
+        <p>Загрузка списка версий...</p>
+    </div>
+
+    <h2>ℹ️ Информация о проекте</h2>
+    <ul>
+        <li><strong>Дисциплина:</strong> Разработка программных приложений</li>
+        <li><strong>Тема:</strong> Автоматизация публикации web приложения</li>
+        <li><strong>Технологии:</strong> GitHub Pages, GitHub Actions, HTML, CSS, JavaScript</li>
+        <li><strong>Функции:</strong> Автоматический деплой, управление версиями, многоязычность</li>
+    </ul>
+
+    <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ccc; text-align: center;">
+        <p>Новосибирский государственный технический университет • Факультет бизнеса • 2024</p>
+    </footer>
+
+    <script>
+        // Загрузка списка версий
+        fetch('versions.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('versions.json not found');
+                }
+                return response.json();
+            })
+            .then(versions => {
+                const list = document.getElementById('versions-list');
+                
+                if (versions.length === 0) {
+                    list.innerHTML = '<p>Пока нет доступных версий. Создайте первый релиз!</p>';
+                    return;
+                }
+                
+                list.innerHTML = '';
+                versions.forEach(version => {
+                    const versionElement = document.createElement('div');
+                    versionElement.className = 'version-card';
+                    versionElement.innerHTML = `
+                        <h3>Версия ${version.name}</h3>
+                        <p><strong>Дата:</strong> ${new Date(version.date).toLocaleDateString('ru-RU')}</p>
+                        <p>
+                            <a href="${version.url}/ru/">Русская версия</a> | 
+                            <a href="${version.url}/en/">English version</a>
+                        </p>
+                    `;
+                    list.appendChild(versionElement);
+                });
+            })
+            .catch(error => {
+                document.getElementById('versions-list').innerHTML = 
+                    '<p>Пока нет доступных версий. После создания первого релиза здесь появятся все версии сайта.</p>';
+            });
+    </script>
 </body>
 </html>
