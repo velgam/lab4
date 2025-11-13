@@ -1,0 +1,14 @@
+[
+    {
+      "name": "v4.0.0",
+      "url": "versions/v4.0.0",
+      "date": "2024-11-13",
+      "description": "Latest release"
+    },
+    {
+      "name": "v3.1.0", 
+      "url": "versions/v3.1.0",
+      "date": "2024-11-13",
+      "description": "Previous release"
+    }
+  ]
