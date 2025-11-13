@@ -1,85 +1,37 @@
 name: Deploy on Release
-
-on:
-  release:
-    types: [published]
-
+on: [release]
 jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: github-pages
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        
-      - name: Debug - Show files
-        run: |
-          echo "📁 Current structure:"
-          ls -la
-          echo "📁 Versions folder:"
-          ls -la versions/ || echo "No versions folder"
-          
-      - name: Create version with verification
-        run: |
+      - uses: actions/checkout@v4
+      - run: |
           VERSION="${GITHUB_REF#refs/tags/}"
-          echo "🚀 Deploying: $VERSION"
+          echo "Deploying: $VERSION"
           
-          # Создаем папку
+          # Создаем папку версии
           mkdir -p "versions/$VERSION"
           
-          # Копируем файлы с проверкой
-          echo "📋 Copying files..."
+          # Копируем файлы С ИХ СОДЕРЖИМЫМ
           cp -r en/ ru/ index.html "versions/$VERSION/"
           
-          # Проверяем что скопировалось
-          echo "✅ Files in versions/$VERSION/:"
+          # ПРОВЕРЯЕМ что скопировалось
+          echo "Files in versions/$VERSION/:"
           ls -la "versions/$VERSION/"
+          echo "Files in versions/$VERSION/ru/:"
+          ls -la "versions/$VERSION/ru/"
           
-      - name: Fix HTML links
-        run: |
-          VERSION="${GITHUB_REF#refs/tags/}"
-          echo "🔧 Fixing links for: $VERSION"
-          
-          # Исправляем пути в HTML файлах
-          sed -i 's|href="/lab4/|href="/lab4/versions/'$VERSION'/|g' "versions/$VERSION/ru/index.html"
-          sed -i 's|href="/lab4/|href="/lab4/versions/'$VERSION'/|g' "versions/$VERSION/en/index.html"
-          sed -i 's|href="en/|href="/lab4/versions/'$VERSION'/en/|g' "versions/$VERSION/ru/index.html"
-          sed -i 's|href="ru/|href="/lab4/versions/'$VERSION'/ru/|g' "versions/$VERSION/en/index.html"
-          
-      - name: Update versions list
-        run: |
-          VERSION="${GITHUB_REF#refs/tags/}"
-          echo "📝 Updating versions.json"
-          
-          if [ ! -f versions.json ]; then
-            echo '[]' > versions.json
+          # Обновляем versions.json
+          if [ -f versions.json ]; then
+            node -e "
+            let v = require('./versions.json');
+            if (!v.find(x => x.name === '$VERSION')) {
+              v.unshift({name:'$VERSION', url:'versions/$VERSION', date:new Date().toISOString()});
+              require('fs').writeFileSync('versions.json', JSON.stringify(v, null, 2));
+            }
+            "
           fi
-          
-          node -e "
-          const fs = require('fs');
-          let versions = [];
-          try {
-            versions = JSON.parse(fs.readFileSync('versions.json'));
-          } catch(e) {}
-          
-          if (!versions.find(v => v.name === '$VERSION')) {
-            versions.unshift({
-              name: '$VERSION',
-              url: 'versions/$VERSION',
-              date: new Date().toISOString()
-            });
-            console.log('✅ Added version: $VERSION');
-          }
-          
-          fs.writeFileSync('versions.json', JSON.stringify(versions, null, 2));
-          console.log('Total versions:', versions.length);
-          "
-          
       - uses: actions/upload-pages-artifact@v3
         with: { path: . }
       - uses: actions/deploy-pages@v4
