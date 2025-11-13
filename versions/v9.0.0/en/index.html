@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Site - English Version</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            line-height: 1.6;
+        }
+        nav { 
+            background: #f4f4f4; 
+            padding: 15px; 
+            border-radius: 5px; 
+            margin-bottom: 20px;
+        }
+        nav a { 
+            margin: 0 10px; 
+            text-decoration: none; 
+            color: #333; 
+            font-weight: bold;
+        }
+        nav a:hover { 
+            color: #007acc; 
+        }
+        .version-info { 
+            background: #e7f3ff; 
+            padding: 10px; 
+            border-radius: 5px; 
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/LAB4/">Home</a> |
+        <a href="/LAB4/en/">English Version</a> |
+        <a href="/LAB4/ru/">Russian Version</a>
+    </nav>
+
+    <h1>Welcome to the English version! 🇺🇸</h1>
+    
+    <div class="version-info">
+        <strong>Version:</strong> <span id="version">current</span>
+    </div>
+
+    <p>This is a demo page in English for Laboratory Work #4.</p>
+    
+    <h2>About the Project</h2>
+    <p>This project demonstrates automation of web application publishing using GitHub Pages and GitHub Actions.</p>
+    
+    <h2>Features</h2>
+    <ul>
+        <li>Automatic deployment on releases</li>
+        <li>Multiple version support</li>
+        <li>Multilingual interface</li>
+        <li>CI/CD pipeline</li>
+    </ul>
+
+    <footer style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ccc;">
+        <p>Laboratory Work #4 - Software Application Development</p>
+    </footer>
+
+    <script>
+        // Determine current version from URL
+        const pathSegments = window.location.pathname.split('/').filter(segment => segment);
+        if (pathSegments[1] === 'versions') {
+            document.getElementById('version').textContent = pathSegments[2];
+        }
+    </script>
+</body>
+</html>

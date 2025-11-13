@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Главная страница - Лабораторная работа №4</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            max-width: 900px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            line-height: 1.6;
+        }
+        nav { 
+            background: #f4f4f4; 
+            padding: 15px; 
+            border-radius: 5px; 
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        nav a { 
+            margin: 0 15px; 
+            text-decoration: none; 
+            color: #333; 
+            font-weight: bold;
+            font-size: 18px;
+        }
+        nav a:hover { 
+            color: #007acc; 
+        }
+        .version-card {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            transition: transform 0.2s;
+        }
+        .version-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .version-card a {
+            text-decoration: none;
+            color: #007acc;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        .current-version {
+            background: #e7f7ff;
+            border-color: #007acc;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="ru/">Русская версия</a>
+        <a href="en/">English Version</a>
+    </nav>
+
+    <h1>🚀 Лабораторная работа №4</h1>
+    <h2>Автоматизация публикации web приложения</h2>
+    
+    <p>Добро пожаловать на главную страницу проекта!</p>
+
+    <div class="version-card current-version">
+        <h3>📱 Текущая версия (последняя)</h3>
+        <p><a href="ru/">Русская версия</a> <a href="en/">English version</a></p>
+    </div>
+
+    <h2>📚 Все доступные версии сайта:</h2>
+    <div id="versions-list" class="loading">
+        Загрузка списка версий...
+    </div>
+
+    <script>
+        async function loadVersions() {
+            try {
+                const response = await fetch('versions.json');
+                const versions = await response.json();
+                displayVersions(versions);
+            } catch (error) {
+                document.getElementById('versions-list').innerHTML = 
+                    '<p>Версии загружаются...</p>';
+            }
+        }
+
+        function displayVersions(versions) {
+            const list = document.getElementById('versions-list');
+            
+            if (!versions || versions.length === 0) {
+                list.innerHTML = '<p>Пока нет версий. Создайте первый релиз!</p>';
+                return;
+            }
+            
+            list.innerHTML = '';
+            versions.forEach(version => {
+                const versionElement = document.createElement('div');
+                versionElement.className = 'version-card';
+                versionElement.innerHTML = `
+                    <h3>Версия ${version.name}</h3>
+                    <p><strong>Дата:</strong> ${new Date(version.date).toLocaleDateString('ru-RU')}</p>
+                    <p>
+                        <a href="${version.url}/ru/">Русская версия</a> 
+                        <a href="${version.url}/en/">English version</a>
+                    </p>
+                `;
+                list.appendChild(versionElement);
+            });
+        }
+
+        loadVersions();
+    </script>
+    <script>
+        // Принудительная загрузка версий с кэш-бюстом
+        async function loadVersions() {
+            try {
+                const response = await fetch('versions.json?' + new Date().getTime());
+                const versions = await response.json();
+                console.log('Loaded versions:', versions); // Для дебага
+                displayVersions(versions);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('versions-list').innerHTML = 
+                    '<p>Ошибка загрузки версий</p>';
+            }
+        }
+        
+        function displayVersions(versions) {
+            const list = document.getElementById('versions-list');
+            list.innerHTML = '';
+            
+            versions.forEach(version => {
+                const div = document.createElement('div');
+                div.className = 'version-card';
+                div.innerHTML = `
+                    <h3>Версия ${version.name}</h3>
+                    <p><strong>Дата:</strong> ${new Date(version.date).toLocaleDateString('ru-RU')}</p>
+                    <p>
+                        <a href="${version.url}/ru/" target="_blank">Русская версия</a> 
+                        <a href="${version.url}/en/" target="_blank">English version</a>
+                    </p>
+                `;
+                list.appendChild(div);
+            });
+        }
+        
+        // Загружаем при старте и каждые 5 секунд (для теста)
+        loadVersions();
+        setInterval(loadVersions, 5000);
+        </script>
+</body>
+</html>
