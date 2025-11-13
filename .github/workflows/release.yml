@@ -17,75 +17,69 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-        
-      - name: Create version folder
+      - name: Debug - Show files
+        run: |
+          echo "📁 Current structure:"
+          ls -la
+          echo "📁 Versions folder:"
+          ls -la versions/ || echo "No versions folder"
+          
+      - name: Create version with verification
         run: |
           VERSION="${GITHUB_REF#refs/tags/}"
           echo "🚀 Deploying: $VERSION"
           
-          # Create version folder
+          # Создаем папку
           mkdir -p "versions/$VERSION"
-          cp -r en ru index.html "versions/$VERSION/"
           
-      - name: Update versions.json - ADD NEW VERSION
+          # Копируем файлы с проверкой
+          echo "📋 Copying files..."
+          cp -r en/ ru/ index.html "versions/$VERSION/"
+          
+          # Проверяем что скопировалось
+          echo "✅ Files in versions/$VERSION/:"
+          ls -la "versions/$VERSION/"
+          
+      - name: Fix HTML links
         run: |
           VERSION="${GITHUB_REF#refs/tags/}"
-          echo "📝 Adding version to list: $VERSION"
+          echo "🔧 Fixing links for: $VERSION"
           
-          # Create versions.json if doesn't exist
+          # Исправляем пути в HTML файлах
+          sed -i 's|href="/lab4/|href="/lab4/versions/'$VERSION'/|g' "versions/$VERSION/ru/index.html"
+          sed -i 's|href="/lab4/|href="/lab4/versions/'$VERSION'/|g' "versions/$VERSION/en/index.html"
+          sed -i 's|href="en/|href="/lab4/versions/'$VERSION'/en/|g' "versions/$VERSION/ru/index.html"
+          sed -i 's|href="ru/|href="/lab4/versions/'$VERSION'/ru/|g' "versions/$VERSION/en/index.html"
+          
+      - name: Update versions list
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/}"
+          echo "📝 Updating versions.json"
+          
           if [ ! -f versions.json ]; then
             echo '[]' > versions.json
           fi
           
-          # ADD version without replacing others
           node -e "
           const fs = require('fs');
           let versions = [];
-          
           try {
             versions = JSON.parse(fs.readFileSync('versions.json'));
-            console.log('Found existing versions:', versions.length);
-          } catch (e) {
-            console.log('Starting with empty versions array');
-          }
+          } catch(e) {}
           
-          // Check if version already exists
-          const existingIndex = versions.findIndex(v => v.name === '$VERSION');
-          
-          if (existingIndex === -1) {
-            // ADD new version to the beginning
+          if (!versions.find(v => v.name === '$VERSION')) {
             versions.unshift({
               name: '$VERSION',
-              url: 'versions/$VERSION', 
-              date: new Date().toISOString(),
-              description: 'Automated release'
+              url: 'versions/$VERSION',
+              date: new Date().toISOString()
             });
-            console.log('✅ ADDED new version: $VERSION');
-          } else {
-            // Update existing version (don't add duplicate)
-            versions[existingIndex].date = new Date().toISOString();
-            console.log('🔄 UPDATED existing version: $VERSION');
+            console.log('✅ Added version: $VERSION');
           }
           
-          // Save ALL versions
           fs.writeFileSync('versions.json', JSON.stringify(versions, null, 2));
-          console.log('Total versions in list:', versions.length);
-          console.log('All versions:', versions.map(v => v.name));
+          console.log('Total versions:', versions.length);
           "
           
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with: 
-          path: .
-          
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-        
-      - name: Show success
-        run: |
-          VERSION="${GITHUB_REF#refs/tags/}"
-          echo "🎉 SUCCESS! Version $VERSION deployed"
-          echo "📊 Check all versions at: https://velgam.github.io/lab4/"
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: . }
+      - uses: actions/deploy-pages@v4
