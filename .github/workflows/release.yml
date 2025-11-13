@@ -7,6 +7,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: 
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     permissions:
       contents: write
       pages: write
@@ -23,13 +26,10 @@ jobs:
       with:
         node-version: '18'
 
-    - name: Setup Pages
-      uses: actions/configure-pages@v4
-
     - name: Create version deployment
       run: |
         VERSION_NAME="${GITHUB_REF#refs/tags/}"
-        echo "Deploying version: $VERSION_NAME"
+        echo "🚀 Deploying version: $VERSION_NAME"
         
         # Создаем папку для версии
         mkdir -p "versions/$VERSION_NAME"
@@ -49,23 +49,39 @@ jobs:
     - name: Update versions list
       run: |
         VERSION_NAME="${GITHUB_REF#refs/tags/}"
+        echo "📝 Updating versions list with: $VERSION_NAME"
         
         # Создаем или обновляем versions.json
         if [ -f versions.json ]; then
           node -e "
             const fs = require('fs');
-            const versions = JSON.parse(fs.readFileSync('versions.json'));
-            const newVersion = { name: '$VERSION_NAME', url: 'versions/$VERSION_NAME', date: new Date().toISOString() };
+            let versions = [];
+            try {
+              versions = JSON.parse(fs.readFileSync('versions.json'));
+            } catch (e) {}
             
             // Добавляем версию если её еще нет
             if (!versions.find(v => v.name === '$VERSION_NAME')) {
-              versions.unshift(newVersion);
+              versions.unshift({
+                name: '$VERSION_NAME', 
+                url: 'versions/$VERSION_NAME', 
+                date: new Date().toISOString(),
+                description: 'Automated release'
+              });
               fs.writeFileSync('versions.json', JSON.stringify(versions, null, 2));
+              console.log('✅ Version added to versions.json');
+            } else {
+              console.log('ℹ️ Version already exists in versions.json');
             }
           "
         else
-          echo '[{"name": "'$VERSION_NAME'", "url": "versions/'$VERSION_NAME'", "date": "'$(date -I)'"}]' > versions.json
+          echo '[{"name": "'$VERSION_NAME'", "url": "versions/'$VERSION_NAME'", "date": "'$(date -I)'", "description": "First automated release"}]' > versions.json
+          echo "✅ Created versions.json with first version"
         fi
+        
+        # Показываем содержимое versions.json для дебага
+        echo "📄 Current versions.json:"
+        cat versions.json
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
@@ -79,4 +95,4 @@ jobs:
     - name: Show deployment info
       run: |
         echo "✅ Successfully deployed version: ${GITHUB_REF#refs/tags/}"
-        echo "📱 Your site will be available at: https://${{ github.repository_owner }}.github.io/LAB4/"
+        echo "🌐 Your site is available at: ${{ steps.deployment.outputs.page_url }}"
